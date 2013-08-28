@@ -18,7 +18,6 @@ import com.sibb.visual.impl.InventoryInterface;
 
 public class GameState extends State {
 	private ChatboxInterface chatInterface = null;
-	private InventoryInterface inventory = null;
 
 	private boolean displayMinimap;
 	UnicodeFont font = null;
