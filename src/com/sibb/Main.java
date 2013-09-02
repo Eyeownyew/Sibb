@@ -17,7 +17,8 @@ public class Main {
 			Engine engine = new Engine("Sibb");
 			app = new AppGameContainer(engine, (int) Toolkit.getDefaultToolkit().getScreenSize()
 					.getWidth(), (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight(),
-					true);
+					false);
+			System.setProperty("org.lwjgl.opengl.Window.undecorated", "true");
 			app.setTargetFrameRate(60);
 			app.start();
 		} catch (SlickException e) {

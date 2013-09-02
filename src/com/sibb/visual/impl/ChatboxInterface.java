@@ -1,6 +1,8 @@
 package com.sibb.visual.impl;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.newdawn.slick.Color;
 import org.newdawn.slick.Graphics;
@@ -10,11 +12,13 @@ import org.newdawn.slick.geom.Rectangle;
 
 import com.sibb.Client;
 import com.sibb.Engine;
-import com.sibb.global.Globals;
 import com.sibb.state.GameState;
 import com.sibb.util.ImageLoader;
+import com.sibb.visual.InterfaceHandler;
 import com.sibb.visual.Panel;
 import com.sibb.visual.ScrollableInterface;
+import com.sibb.world.Chat;
+import com.sibb.world.Message;
 
 public class ChatboxInterface extends ScrollableInterface {
 
@@ -22,52 +26,125 @@ public class ChatboxInterface extends ScrollableInterface {
 
 	public ChatboxInterface(int x, int y, int width, int height, int lineHeight) {
 		super(x, y, width, height, lineHeight, true);
+		InterfaceHandler.setChatbox(this);
 		chatboxImage = ImageLoader.loadInterface("cb_bg");
 		setInnerPanel(new Panel(2000, 15 * lineHeight));
 	}
 
 	public void drawChat(Graphics g) {
 		GameState state = ((GameState) Engine.getInstance().getState());
-		List<String> cbText = Globals.cbText;
+		List<Message> cbText = Chat.getCbText();
 		UnicodeFont font = Engine.getInstance().getFont();
-		g.setFont(font);
 
 		if (cbText.size() > 15)
 			getInnerPanel().setCurrentHeight(cbText.size() * getLineHeight());
 
-		int inputTextHeight = (int) (getBounds().getY() + getBounds().getHeight() - 18);
-		g.setColor(Color.yellow);
-		g.drawString(Client.getPlayer().getUsername() + ": ", getBounds().getX() + 5,
-				inputTextHeight);
+		int inputTextHeight = (int) (getBounds().getY() + getBounds().getHeight() - 20);
 
-		g.setColor(Color.white);
-		g.drawString(state.playerEnteredText + "|",
-				getBounds().getX() + 5 + font.getWidth(Client.getPlayer().getUsername() + ": "),
-				inputTextHeight);
+		drawColoredText(g, Client.getPlayer().getUsername() + ": ", PLAYER_NAME,
+				(int) (getBounds().getX()) + 5, inputTextHeight);
+
+		drawColoredText(g, state.playerEnteredText + "|", PLAYER_INPUT, (int) (getBounds().getX())
+				+ 5 + font.getWidth(Client.getPlayer().getUsername() + ": "), inputTextHeight);
 
 		g.setClip((int) getBounds().getX() + 3, (int) getBounds().getY() + 3, (int) (getBounds()
-				.getWidth() - 20), 216);
-
-		int initialY = (int) inputTextHeight - g.getFont().getHeight("j") - 3;
-		for (int i = 0; i < cbText.size(); i++)
-			g.drawString(
-					cbText.get(i),
-					getBounds().getX() + 5,
+				.getWidth() - 23), 216);
+		int initialY = (int) inputTextHeight - Engine.getInstance().fontSize - 7;
+		for (int i = 0; i < cbText.size(); i++) {
+			drawColoredText(
+					g,
+					"<" + textForColor(colorForChatType(OTHER_PLAYER_NAME)) + ">"
+							+ cbText.get(i).getUsername() + ": " + "<"
+							+ textForColor(colorForChatType(SHOUT_TEXT)) + ">"
+							+ cbText.get(i).getMessage(),
+					cbText.get(i).getType(),
+					(int) (getBounds().getX()) + 5,
 					initialY
 							- (((cbText.size() - i - 1) * getLineHeight()) + (getScrollY() * getLineHeight())));
+		}
 		g.clearClip();
 	}
 
-	public void messageReceived(String message) {
-		List<String> cbText = Globals.cbText;
-		cbText.add(message);
-		if (cbText.size() > 100) {
-			cbText.remove(0);
-			setScrollY(getScrollY() + 1);
+	private void drawColoredText(Graphics g, String text, int chatType, int startX, int y) {
+		System.out.println(text);
+
+		int currentX = startX;
+
+		g.setColor(colorForChatType(chatType));
+
+		Pattern pattern = Pattern.compile("<(.*?)>");
+		Matcher matcher = pattern.matcher(text);
+		int foundMatches = 0;
+		int[] colorIndexes = new int[20];
+		Color[] colors = new Color[20];
+		int totalSkippedCharacters = 0;
+		while (matcher.find()) {
+			colorIndexes[foundMatches] = matcher.start() - totalSkippedCharacters;
+			totalSkippedCharacters += matcher.group().length();
+			colors[foundMatches++] = colorForText(matcher.group().replaceAll("[<>]", ""));
 		}
-		if (getScrollY() != 0 && getScrollY() > -100) {
-			setScrollY(getScrollY() - 1);
+		text = text.replaceAll("<(.*?)>", "");
+		int colorIndex = 0;
+		for (int i = 0; i < text.length(); i++) {
+			char currentChar = text.charAt(i);
+			if (foundMatches > 0) {
+				if (colorIndexes[colorIndex] == i) {
+					g.setColor(colors[colorIndex++]);
+				}
+			}
+			g.drawString("" + currentChar, currentX, y);
+			currentX += g.getFont().getWidth("" + currentChar);
 		}
+	}
+
+	private Color colorForText(String substring) {
+		String s = substring;
+		if(!s.startsWith("0x"))
+			s = "0x"+s;
+		return new Color(Integer.decode(substring));
+	}
+
+	private String textForColor(Color c) {
+		return "0x" + componentToHex(c.getRed()) + componentToHex(c.getGreen())
+				+ componentToHex(c.getBlue());
+	}
+
+	String componentToHex(int c) {
+		String hex = Integer.toHexString(c);
+		return hex.length() == 1 ? "0" + hex : hex;
+	}
+
+	//Cyan, lightGray, MAYBE red, 
+	private Color whisperTextColor = Color.pink;
+	private Color buddyTextColor = Color.green;
+	private Color globalTextColor = Color.white;
+
+	private Color playerNameColor = Color.yellow;
+	private Color playerInputColor = Color.white;
+	private Color otherPlayerNameColor = Color.orange;
+	private Color shoutTextColor = Color.white;
+
+	private final byte GLOBAL_TEXT = 0, SHOUT_TEXT = 1, BUDDY_TEXT = 2, PLAYER_INPUT = 3,
+			PLAYER_NAME = 4, WHISPER_TEXT = 5, OTHER_PLAYER_NAME = 6;
+
+	private Color colorForChatType(int chatType) {
+		switch (chatType) {
+		case GLOBAL_TEXT:
+			return globalTextColor;
+		case SHOUT_TEXT:
+			return shoutTextColor;
+		case BUDDY_TEXT:
+			return buddyTextColor;
+		case PLAYER_INPUT:
+			return playerInputColor;
+		case PLAYER_NAME:
+			return playerNameColor;
+		case WHISPER_TEXT:
+			return whisperTextColor;
+		case OTHER_PLAYER_NAME:
+			return otherPlayerNameColor;
+		}
+		return null;
 	}
 
 	@Override

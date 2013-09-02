@@ -14,21 +14,22 @@ public class Constructor {
 	}
 
 	public ChannelBuffer loginPacket() {
-		ChannelBuffer buffer = ChannelBuffers.buffer(200);
+		ChannelBuffer buffer = ChannelBuffers.dynamicBuffer();
 		Client c = Client.getClient();
 		String hex = WzSecurity.md5(c.getPassword() + c.getUsername());
-
-		try {
-			buffer.writeByte(1);
-			buffer.writeByte(c.getUsername().length());
-			buffer.writeBytes(c.getUsername().getBytes());
-			buffer.writeByte(hex.length());
-			buffer.writeBytes(hex.getBytes());
-			System.out.println("" + hex.length() + " " + hex);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		buffer.writeByte(0);
+		buffer.writeByte(c.getUsername().length());
+		buffer.writeBytes(c.getUsername().getBytes());
+		buffer.writeByte(hex.length());
+		buffer.writeBytes(hex.getBytes());
 		return buffer;
+	}
 
+	public ChannelBuffer messagePacket(String message) {
+		ChannelBuffer data = ChannelBuffers.dynamicBuffer();
+		data.writeByte(1);
+		data.writeInt(message.length());
+		data.writeBytes(message.getBytes());
+		return data;
 	}
 }

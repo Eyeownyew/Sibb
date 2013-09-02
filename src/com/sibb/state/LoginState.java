@@ -19,11 +19,11 @@ public class LoginState extends State {
 
 	String errorMessage = "";
 	String errorMessage2 = "";
-	UnicodeFont font = null;
 	boolean messageSent = false;
 	DataOutputStream out = null;
 	String password = "";
 	int selectedBox = 0;
+	UnicodeFont font;
 
 	String username = "";
 
@@ -42,7 +42,6 @@ public class LoginState extends State {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		Engine.getInstance().setState(new GameState(), Main.app);
 	}
 
 	@Override
@@ -109,7 +108,6 @@ public class LoginState extends State {
 		int width = 400;
 		int height = 20;
 		g.setColor(Color.darkGray);
-		g.setFont(font);
 		g.fill(new Rectangle((gc.getWidth() / 2) - (width / 2), (gc.getHeight() / 2) - 100, width,
 				height));
 		g.fill(new Rectangle((gc.getWidth() / 2) - (width / 2), (gc.getHeight() / 2), width, height));

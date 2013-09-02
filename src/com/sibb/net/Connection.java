@@ -10,7 +10,6 @@ import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 
-
 public class Connection {
 	public static boolean establishConnection() {
 

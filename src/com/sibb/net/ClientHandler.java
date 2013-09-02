@@ -8,6 +8,9 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
 
 import com.sibb.Client;
+import com.sibb.net.codec.PacketDecoder;
+import com.sibb.net.packet.Packet;
+import com.sibb.net.packet.PacketHandler;
 
 public class ClientHandler extends SimpleChannelHandler {
 	protected Client c = null;
@@ -24,9 +27,9 @@ public class ClientHandler extends SimpleChannelHandler {
 	}
 
 	@Override
-	public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-		ChannelBuffer packet = (ChannelBuffer)e.getMessage();
-		System.out.println((packet.readByte() == 1 ? "Success!" : "Could not authenticate"));
+	public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
+		Packet p = PacketDecoder.decode((ChannelBuffer) e.getMessage());
+		PacketHandler.processPacket(p);
 	}
 
 }

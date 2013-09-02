@@ -15,9 +15,9 @@ import com.sibb.Main;
 import com.sibb.visual.InterfaceHandler;
 import com.sibb.visual.impl.ChatboxInterface;
 import com.sibb.visual.impl.InventoryInterface;
+import com.sibb.world.Chat;
 
 public class GameState extends State {
-	private ChatboxInterface chatInterface = null;
 
 	private boolean displayMinimap;
 	UnicodeFont font = null;
@@ -75,11 +75,14 @@ public class GameState extends State {
 	public void init(GameContainer gc) throws SlickException {
 		font = Engine.getInstance().getFont();
 		map = new TiledMap("data/maps/betamap.tmx");
-		chatInterface = new ChatboxInterface(0, Main.app.getHeight() - 240, 600, 240,
-				Engine.getInstance().fontSize);
-		Engine.getInstance().getActiveInterfaces().add(chatInterface);
-		Engine.getInstance().getActiveInterfaces().add(new InventoryInterface(600,240));
 		gc.getInput().enableKeyRepeat();
+		initInterfaces();
+	}
+
+	private void initInterfaces() {
+		new ChatboxInterface(0, Main.app.getHeight() - 240, 600, 240,
+				Engine.getInstance().fontSize + 2);
+		new InventoryInterface(600, 240);
 	}
 
 	@Override
@@ -99,8 +102,8 @@ public class GameState extends State {
 			break;
 		case Input.KEY_ENTER:
 			if (playerEnteredText != "") {
+				Chat.messageEntered(playerEnteredText);
 				playerEnteredText = "";
-				chatInterface.messageReceived(playerEnteredText);
 			}
 			break;
 		case Input.KEY_UP:
@@ -116,12 +119,18 @@ public class GameState extends State {
 			Client.getPlayer().setX(Client.getPlayer().getX() + 10);
 			break;
 		default:
-			if (c > 0 && c < 255)
-				if (font.getWidth(playerEnteredText + c) + 20 < 600 - font.getWidth(Client
+			if (c > 0 && c < 255) {
+				for (char invalid : invalidCharacters)
+					if (c == invalid)
+						return;
+				if (font.getWidth(playerEnteredText + c) + 20 < 587 - font.getWidth(Client
 						.getPlayer().getUsername() + ":"))
 					playerEnteredText += c;
+			}
 		}
 	}
+
+	private char[] invalidCharacters = new char[] { '<', '>' };
 
 	@Override
 	public void mouseClicked(int button, int x, int y, int clickCount) {
@@ -142,7 +151,7 @@ public class GameState extends State {
 			drawStringCentered(g, "Minimap", gc.getWidth() / 2, 20);
 		}
 		InterfaceHandler.renderInterfaces(g);
-		
+
 	}
 
 	@Override

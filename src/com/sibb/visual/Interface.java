@@ -29,6 +29,7 @@ public abstract class Interface {
 
 	public Interface(int x, int y, int width, int height) {
 		this.bounds = new Rectangle(x, y, width, height);
+		InterfaceHandler.getActiveInterfaces().add(this);
 		interfaceExit = ImageLoader.loadInterface("Interface-Exit");
 	}
 

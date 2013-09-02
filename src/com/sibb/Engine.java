@@ -10,6 +10,7 @@ import org.newdawn.slick.UnicodeFont;
 import org.newdawn.slick.geom.Rectangle;
 
 import com.sibb.net.Connection;
+import com.sibb.state.GameState;
 import com.sibb.state.LoginState;
 import com.sibb.state.State;
 import com.sibb.util.WzFont;
@@ -27,7 +28,7 @@ public class Engine extends BasicGame {
 
 	UnicodeFont font = null;
 
-	public final int fontSize = 14;
+	public final int fontSize = 12;
 
 	private State state;
 
@@ -62,7 +63,10 @@ public class Engine extends BasicGame {
 	}
 
 	void loop(GameContainer gc, int delta) {
-
+		if(loggedIn) {
+			setState(new GameState(), Main.app);
+			loggedIn = false;
+		}
 	}
 
 	private boolean interfaceFocused = false;
@@ -103,6 +107,7 @@ public class Engine extends BasicGame {
 
 	@Override
 	public void render(GameContainer gc, Graphics g) throws SlickException {
+		g.setFont(font);
 		getState().render(gc, g);
 	}
 
@@ -123,5 +128,9 @@ public class Engine extends BasicGame {
 	public void update(GameContainer gc, int delta) throws SlickException {
 		loop(gc, delta);
 		getState().update(gc, delta);
+	}
+	private boolean loggedIn = false;
+	public void loggedIn() {
+		loggedIn = true;
 	}
 }
