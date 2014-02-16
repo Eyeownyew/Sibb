@@ -1,142 +1,211 @@
 package com.sibb.visual;
 
-import org.newdawn.slick.Color;
-import org.newdawn.slick.Graphics;
-import org.newdawn.slick.Image;
-import org.newdawn.slick.geom.Rectangle;
-
 import com.sibb.Main;
 import com.sibb.util.ImageLoader;
 
+import java.awt.*;
+
+/**
+ * @author Eyeownywe
+ * @version $Revision: 1.0 $
+ */
 public abstract class ScrollableInterface extends Interface {
 
-	private Panel innerPanel;
+    /**
+     * Method getInnerPanel.
+     *
+     * @return Panel
+     */
+    public Panel getInnerPanel() {
+        return innerPanel;
+    }
 
-	public int lineHeight, scrollbarHeight, scrollY, yToDraw;
+    /**
+     * Method getLineHeight.
+     *
+     * @return int
+     */
+    public int getLineHeight() {
+        return lineHeight;
+    }
 
-	public final int margin = 1, scrollbarWidth = 15;
+    /**
+     * Method getScrollbarRectangle.
+     *
+     * @return Rectangle
+     */
+    public Rectangle getScrollbarRectangle() {
+        int scrollbarMaxHeight = (int) ((getBounds().getY() + getBounds().getHeight() - 36) - (getBounds()
+                .getY() + 36));
+        scrollbarHeight = (int) (scrollbarMaxHeight * (innerPanel.getInitialHeight() / (float) innerPanel.currentHeight));
 
-	public Image scrollbarTrack, scrollbarUp, scrollbarDown;
+        if (invertedScrolling) {
+            yToDraw = (int) (getBounds().getY() + getBounds().getHeight() - 36 /* margin */);
+            yToDraw -= scrollbarHeight;
+        } else {
+            yToDraw = (int) (getBounds().getY() + 36/* margin */);
+        }
+        if (scrollY != 0)
+            if (invertedScrolling)
+                yToDraw -= Math
+                        .ceil(scrollbarMaxHeight
+                                * (float) ((float) Math.abs(scrollY * lineHeight) / (float) innerPanel.currentHeight));
+            else
+                yToDraw += Math
+                        .floor(scrollbarMaxHeight
+                                * (float) ((float) Math.abs(scrollY * lineHeight) / (float) innerPanel.currentHeight));
 
-	private boolean invertedScrolling;
+        if (yToDraw < getBounds().getY() + 36)
+            yToDraw = (int) (getBounds().getY() + 36);
 
-	private Color scrollbarColor = new Color(0x8b8f92);
+        return new Rectangle(
+                (int) (getBounds().getX() + getBounds().getWidth() - scrollbarWidth - 5)/* margin */,
+                yToDraw, scrollbarWidth, scrollbarHeight - 1);
 
-	public ScrollableInterface(int width, int height, int lineHeight, boolean invertedScrolling) {
-		this((Main.app.getWidth() / 2) - (width / 2), (Main.app.getHeight() / 2) - (height / 2),
-				width, height, lineHeight, invertedScrolling);
-	}
+    }
 
-	public ScrollableInterface(int x, int y, int width, int height, int lineHeight,
-			boolean invertedScrolling) {
-		super(x, y, width, height);
-		this.invertedScrolling = invertedScrolling;
-		this.lineHeight = lineHeight;
-		scrollbarTrack = ImageLoader.loadInterface("Scrollbar-track");
-		scrollbarUp = ImageLoader.loadInterface("Scrollbar-up");
-		scrollbarDown = ImageLoader.loadInterface("Scrollbar-down");
-	}
+    /**
+     * Method getScrollY.
+     *
+     * @return int
+     */
+    public int getScrollY() {
+        return scrollY;
+    }
 
-	public Panel getInnerPanel() {
-		return innerPanel;
-	}
+    /**
+     * Method mouseWheelMoved.
+     *
+     * @param newValue int
+     */
+    public void mouseWheelMoved(int newValue) {
+        int newScrollY = scrollY - (newValue / Math.abs(newValue));
 
-	public int getLineHeight() {
-		return lineHeight;
-	}
+        if (invertedScrolling) {
+            int limit = -(getInnerPanel().getCurrentHeight() - getInnerPanel().getInitialHeight())
+                    / lineHeight;
 
-	public int getScrollY() {
-		return scrollY;
-	}
+            if (newScrollY >= 0) {
+                newScrollY = 0;
+            } else if (newScrollY <= limit) {
+                newScrollY = limit;
+            }
 
-	public int limit = 0;
+            scrollY = newScrollY;
+        } else {
+            limit = ((getInnerPanel().getCurrentHeight() - getInnerPanel().getInitialHeight()) / lineHeight);
 
-	public void mouseWheelMoved(int newValue) {
-		if (invertedScrolling) {
-			int newScrollY = scrollY - (newValue / 120);
-			int limit = -(getInnerPanel().getCurrentHeight() - getInnerPanel().getInitialHeight())
-					/ lineHeight;
+            if (newScrollY < 0)
+                newScrollY = 0;
+            else if (newScrollY > limit)
+                newScrollY = limit;
 
-			if (newScrollY >= 0) {
-				newScrollY = 0;
-			} else if (newScrollY <= limit) {
-				newScrollY = limit;
-			}
+            scrollY = newScrollY;
+        }
+    }
 
-			scrollY = newScrollY;
-		} else {
-			int newScrollY = scrollY - (newValue / 120);
-			limit = ((getInnerPanel().getCurrentHeight() - getInnerPanel().getInitialHeight()) / lineHeight);
+    /**
+     * Method render.
+     *
+     * @param g Graphics2D
+     */
+    @Override
+    public void render(Graphics2D g) {
+        renderScrollbar(g);
+    }
 
-			if (newScrollY < 0)
-				newScrollY = 0;
-			else if (newScrollY > limit)
-				newScrollY = limit;
+    /**
+     * Method renderScrollbar.
+     *
+     * @param g Graphics2D
+     */
+    private void renderScrollbar(Graphics2D g) {
+        g.drawImage(scrollbarUp,
+                (int) (getBounds().getX() + getBounds().getWidth() - 19)/* margin */,
+                (int) (getBounds().getY() + 21) /* margin */, null);
+        g.drawImage(scrollbarTrack, (int) (getBounds().getX() + getBounds().getWidth() - 13) /* margin */,
+                (int) (getBounds().getY() + 36) /* margin */, null);
+        g.drawImage(scrollbarDown, (int) (getBounds().getX() + getBounds().getWidth() - 19)/* margin */,
+                (int) (getBounds().getY() + getBounds().getHeight() - 36) /* margin */, null);
+        Rectangle scrollbar = getScrollbarRectangle();
+        g.setColor(scrollbarColor);
+        g.fill(scrollbar);
+        g.setColor(Color.black);
+        g.draw(scrollbar);
+        super.render(g);
+    }
 
-			scrollY = newScrollY;
-		}
-	}
+    /**
+     * Method setInnerPanel.
+     *
+     * @param innerPanel Panel
+     */
+    public void setInnerPanel(Panel innerPanel) {
+        this.innerPanel = innerPanel;
+    }
 
-	@Override
-	public void render(Graphics g) {
-		renderScrollbar(g);
-	}
+    /**
+     * Method setLineHeight.
+     *
+     * @param lineHeight int
+     */
+    public void setLineHeight(int lineHeight) {
+        this.lineHeight = lineHeight;
+    }
 
-	private void renderScrollbar(Graphics g) {
-		g.drawImage(scrollbarUp, getBounds().getX() + getBounds().getWidth() - 19/* margin */,
-				getBounds().getY() + 21 /* margin */);
-		g.drawImage(scrollbarTrack, getBounds().getX() + getBounds().getWidth() - 13 /* margin */,
-				getBounds().getY() + 36 /* margin */);
-		g.drawImage(scrollbarDown, getBounds().getX() + getBounds().getWidth() - 19/* margin */,
-				getBounds().getY() + getBounds().getHeight() - 36 /* margin */);
+    /**
+     * Method setScrollY.
+     *
+     * @param scrollY int
+     */
+    public void setScrollY(int scrollY) {
+        this.scrollY = scrollY;
+    }
 
-		Rectangle scrollbar = getScrollbarRectangle();
-		g.setColor(scrollbarColor);
-		g.fill(scrollbar);
-		g.setColor(Color.black);
-		g.draw(scrollbar);
-		super.render(g);
-	}
+    /**
+     * Constructor for ScrollableInterface.
+     *
+     * @param width             int
+     * @param height            int
+     * @param lineHeight        int
+     * @param invertedScrolling boolean
+     */
+    public ScrollableInterface(int width, int height, int lineHeight, boolean invertedScrolling) {
+        this((Main.app.getWidth() / 2) - (width / 2), (Main.app.getHeight() / 2) - (height / 2),
+                width, height, lineHeight, invertedScrolling);
+    }
 
-	public Rectangle getScrollbarRectangle() {
-		int scrollbarMaxHeight = (int) ((getBounds().getY() + getBounds().getHeight() - 36) - (getBounds()
-				.getY() + 36));
-		scrollbarHeight = (int) (scrollbarMaxHeight * (innerPanel.getInitialHeight() / (float) innerPanel.currentHeight));
+    /**
+     * Constructor for ScrollableInterface.
+     *
+     * @param x                 int
+     * @param y                 int
+     * @param width             int
+     * @param height            int
+     * @param lineHeight        int
+     * @param invertedScrolling boolean
+     */
+    public ScrollableInterface(int x, int y, int width, int height, int lineHeight,
+                               boolean invertedScrolling) {
+        super(x, y, width, height);
+        this.invertedScrolling = invertedScrolling;
+        this.lineHeight = lineHeight;
+        scrollbarTrack = ImageLoader.loadInterface("Scrollbar-track");
+        scrollbarUp = ImageLoader.loadInterface("Scrollbar-up");
+        scrollbarDown = ImageLoader.loadInterface("Scrollbar-down");
+    }
 
-		if (invertedScrolling) {
-			yToDraw = (int) (getBounds().getY() + getBounds().getHeight() - 36 /* margin */);
-			yToDraw -= scrollbarHeight;
-		} else {
-			yToDraw = (int) (getBounds().getY() + 36/* margin */);
-		}
-		if (scrollY != 0)
-			if (invertedScrolling)
-				yToDraw -= Math
-						.ceil(scrollbarMaxHeight
-								* (float) ((float) Math.abs(scrollY * lineHeight) / (float) innerPanel.currentHeight));
-			else
-				yToDraw += Math
-						.floor(scrollbarMaxHeight
-								* (float) ((float) Math.abs(scrollY * lineHeight) / (float) innerPanel.currentHeight));
-		
-		if (yToDraw < getBounds().getY() + 36)
-			yToDraw = (int) (getBounds().getY() + 36);
-		
-		return new Rectangle(
-				getBounds().getX() + getBounds().getWidth() - scrollbarWidth - 3/* margin */,
-				yToDraw, scrollbarWidth, scrollbarHeight);
+    private Panel innerPanel;
 
-	}
+    private boolean invertedScrolling;
 
-	public void setInnerPanel(Panel innerPanel) {
-		this.innerPanel = innerPanel;
-	}
+    public int limit = 0;
 
-	public void setLineHeight(int lineHeight) {
-		this.lineHeight = lineHeight;
-	}
+    public int lineHeight, scrollbarHeight, scrollY, yToDraw;
 
-	public void setScrollY(int scrollY) {
-		this.scrollY = scrollY;
-	}
+    public final int margin = 1, scrollbarWidth = 14;
+
+    private Color scrollbarColor = new Color(0x8b8f92);
+
+    public Image scrollbarTrack, scrollbarUp, scrollbarDown;
 }

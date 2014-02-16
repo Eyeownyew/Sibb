@@ -1,28 +1,30 @@
 package com.sibb;
 
-import java.awt.Toolkit;
+import java.awt.*;
 
-import org.newdawn.slick.AppGameContainer;
-import org.newdawn.slick.SlickException;
-
+/**
+ * @author Eyeownywe
+ * @version $Revision: 1.0 $
+ */
 public class Main {
-	/**
-	 * 
-	 * @param argv
-	 *            The arguments passed to the test
-	 */
-	public static AppGameContainer app = null;
-	public static void main(String[] argv) {
-		try {
-			Engine engine = new Engine("Sibb");
-			app = new AppGameContainer(engine, (int) Toolkit.getDefaultToolkit().getScreenSize()
-					.getWidth(), (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight(),
-					false);
-			System.setProperty("org.lwjgl.opengl.Window.undecorated", "true");
-			app.setTargetFrameRate(60);
-			app.start();
-		} catch (SlickException e) {
-			e.printStackTrace();
-		}
-	}
+    /**
+     *
+
+     */
+    public static Window app = null;
+
+    /**
+     * Method main.
+     *
+     * @param argv String[]
+     */
+    public static void main(String[] argv) {
+        boolean borderless = true;
+        if (argv.length > 0)
+            if (argv[0].startsWith("-e"))
+                borderless = false;
+
+        app = new Window("Sibb", (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
+                (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight(), borderless);
+    }
 }

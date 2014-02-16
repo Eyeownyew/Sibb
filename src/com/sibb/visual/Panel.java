@@ -1,35 +1,75 @@
 package com.sibb.visual;
 
+/**
+ * @author Eyeownywe
+ * @version $Revision: 1.0 $
+ */
 public class Panel {
-	int maxHeight, currentHeight = 0, initialHeight = 0;
+    /**
+     * Method getCurrentHeight.
+     *
+     * @return int
+     */
+    public int getCurrentHeight() {
+        return currentHeight;
+    }
 
-	public Panel(int maxHeight, int initialHeight) {
-		this.maxHeight = maxHeight;
-		this.currentHeight = initialHeight;
-		this.initialHeight = initialHeight;
-	}
+    /**
+     * Method getInitialHeight.
+     *
+     * @return int
+     */
+    public int getInitialHeight() {
+        return initialHeight;
+    }
 
-	public int getCurrentHeight() {
-		return currentHeight;
-	}
+    /**
+     * Method getMaxHeight.
+     *
+     * @return int
+     */
+    public int getMaxHeight() {
+        return maxHeight;
+    }
 
-	public int getMaxHeight() {
-		return maxHeight;
-	}
+    /**
+     * Method setCurrentHeight.
+     *
+     * @param currentHeight int
+     */
+    public void setCurrentHeight(int currentHeight) {
+        this.currentHeight = currentHeight;
+    }
 
-	public void setCurrentHeight(int currentHeight) {
-		this.currentHeight = currentHeight;
-	}
+    /**
+     * Method setInitialHeight.
+     *
+     * @param initialHeight int
+     */
+    public void setInitialHeight(int initialHeight) {
+        this.initialHeight = initialHeight;
+    }
 
-	public void setMaxHeight(int maxHeight) {
-		this.maxHeight = maxHeight;
-	}
+    /**
+     * Method setMaxHeight.
+     *
+     * @param maxHeight int
+     */
+    public void setMaxHeight(int maxHeight) {
+        this.maxHeight = maxHeight;
+    }
 
-	public int getInitialHeight() {
-		return initialHeight;
-	}
+    /**
+     * Constructor for Panel.
+     *
+     * @param maxHeight     int
+     * @param initialHeight int
+     */
+    public Panel(int maxHeight, int initialHeight) {
+        this.maxHeight = maxHeight;
+        this.currentHeight = initialHeight;
+        this.initialHeight = initialHeight;
+    }
 
-	public void setInitialHeight(int initialHeight) {
-		this.initialHeight = initialHeight;
-	}
+    int maxHeight, currentHeight = 0, initialHeight = 0;
 }

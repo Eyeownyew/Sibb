@@ -1,136 +1,114 @@
 package com.sibb;
 
-import java.util.List;
-
-import org.newdawn.slick.BasicGame;
-import org.newdawn.slick.GameContainer;
-import org.newdawn.slick.Graphics;
-import org.newdawn.slick.SlickException;
-import org.newdawn.slick.UnicodeFont;
-import org.newdawn.slick.geom.Rectangle;
-
 import com.sibb.net.Connection;
 import com.sibb.state.GameState;
 import com.sibb.state.LoginState;
 import com.sibb.state.State;
 import com.sibb.util.WzFont;
-import com.sibb.visual.Interface;
-import com.sibb.visual.InterfaceHandler;
-import com.sibb.visual.ScrollableInterface;
 
-public class Engine extends BasicGame {
+import java.awt.*;
 
-	private static Engine engine;
+/**
+ * @author Eyeownyew
+ * @version $Revision: 1.0 $
+ */
+public class Engine extends GameContainer {
 
-	public static Engine getInstance() {
-		return engine;
-	}
+    private static Engine engine;
 
-	UnicodeFont font = null;
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
 
-	public final int fontSize = 12;
+    /**
+     * Method getInstance
+     *
+     * @return Engine
+     */
+    public static Engine getInstance() {
+        return engine;
+    }
 
-	private State state;
+    /**
+     * Method getFont.
+     *
+     * @return Font * @see java.awt.MenuContainer#getFont() * @see java.awt.MenuContainer#getFont()
+     */
+    public Font getFont() {
+        return font;
+    }
 
-	public Engine(String name) {
-		super(name);
-		engine = this;
-	}
+    /**
+     * Method getGState.
+     *
+     * @return State
+     */
+    public State getGState() {
+        return state;
+    }
 
-	public List<Interface> getActiveInterfaces() {
-		return InterfaceHandler.getActiveInterfaces();
-	}
+    @Override
+    public void init() {
+        engine = this;
+        setState(new LoginState());
+        new Thread(new Connection()).start();
+        font = WzFont.getInstance().getFont();
+    }
 
-	public UnicodeFont getFont() {
-		return font;
-	}
+    public void loggedIn() {
+        loggedIn = true;
+    }
 
-	public State getState() {
-		return state;
-	}
+    /**
+     * Method loop
+     *
+     * @param delta int
+     */
+    void loop(int delta) {
+        state.update(this, delta);
+        if (loggedIn) {
+            setState(new GameState());
+            loggedIn = false;
+        }
+    }
 
-	@Override
-	public void init(GameContainer gc) throws SlickException {
-		Connection.establishConnection();
-		font = WzFont.rsct(fontSize);
-		setState(new LoginState(), gc);
-		gc.getInput().enableKeyRepeat();
-	}
+    /**
+     * Method render
+     *
+     * @param g Graphics2D
+     */
+    @Override
+    public void render(Graphics2D g) {
+        g.setFont(font);
+        if (state != null && state.init)
+            state.render(this, g);
+    }
 
-	@Override
-	public void keyPressed(int key, char c) {
-		state.keyPressed(key, c);
-	}
+    /**
+     * Method setState
+     *
+     * @param gameState State
+     */
+    public void setState(State gameState) {
+        this.state = gameState;
+        gameState.init(this);
+    }
 
-	void loop(GameContainer gc, int delta) {
-		if(loggedIn) {
-			setState(new GameState(), Main.app);
-			loggedIn = false;
-		}
-	}
+    /**
+     * Method update
+     *
+     * @param delta int
+     */
+    public void update(int delta) {
+        loop(delta);
+    }
 
-	private boolean interfaceFocused = false;
+    Font font = null;
 
-	@Override
-	public void mouseDragged(int oldX, int oldY, int newX, int newY) {
-		mouseClicked(0, oldX, oldY, 1);
-		Interface i = InterfaceHandler.getFocused();
-		if(i.getBounds().contains(oldX,oldY)) {
-			Rectangle r = i.getBounds();
-			i.setBounds(new Rectangle(r.getX()+(newX-oldX), r.getY()+(newY-oldY), r.getWidth(), r.getHeight()));
-		}
-	}
+    private boolean loggedIn = false;
 
-	@Override
-	public void mouseClicked(int button, int x, int y, int clickCount) {
-		for (Interface i : getActiveInterfaces()) {
-			if (i.getBounds().contains(x, y)) {
-				if (InterfaceHandler.getFocused() != i)
-					InterfaceHandler.setFocused(i);
-				interfaceFocused = true;
-				break;
-			}
-			interfaceFocused = false;
-		}
-		state.mouseClicked(button, x, y, clickCount);
-	}
+    private State state;
 
-	@Override
-	public void mouseWheelMoved(int newValue) {
-		if (interfaceFocused) {
-			Interface i = InterfaceHandler.getFocused();
-			if (i instanceof ScrollableInterface) {
-				((ScrollableInterface) i).mouseWheelMoved(newValue);
-			}
-		}
-	}
 
-	@Override
-	public void render(GameContainer gc, Graphics g) throws SlickException {
-		g.setFont(font);
-		getState().render(gc, g);
-	}
-
-	public void setFont(UnicodeFont font) {
-		this.font = font;
-	}
-
-	public void setState(State gameState, GameContainer gc) {
-		try {
-			gameState.init(gc);
-			this.state = gameState;
-		} catch (SlickException e) {
-			e.printStackTrace();
-		}
-	}
-
-	@Override
-	public void update(GameContainer gc, int delta) throws SlickException {
-		loop(gc, delta);
-		getState().update(gc, delta);
-	}
-	private boolean loggedIn = false;
-	public void loggedIn() {
-		loggedIn = true;
-	}
 }

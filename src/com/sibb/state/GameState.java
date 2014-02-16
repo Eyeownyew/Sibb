@@ -1,162 +1,239 @@
 package com.sibb.state;
 
-import org.newdawn.slick.Color;
-import org.newdawn.slick.GameContainer;
-import org.newdawn.slick.Graphics;
-import org.newdawn.slick.Image;
-import org.newdawn.slick.Input;
-import org.newdawn.slick.SlickException;
-import org.newdawn.slick.UnicodeFont;
-import org.newdawn.slick.tiled.TiledMap;
-
-import com.sibb.Client;
-import com.sibb.Engine;
-import com.sibb.Main;
-import com.sibb.visual.InterfaceHandler;
+import com.sibb.*;
+import com.sibb.Window;
+import com.sibb.input.Keyboard;
+import com.sibb.util.ImageLoader;
+import com.sibb.util.WzFont;
 import com.sibb.visual.impl.ChatboxInterface;
 import com.sibb.visual.impl.InventoryInterface;
 import com.sibb.world.Chat;
+import com.sibb.world.MapLoader;
 
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map.Entry;
+
+/**
+ * @author Eyeownywe
+ * @version $Revision: 1.0 $
+ */
 public class GameState extends State {
 
-	private boolean displayMinimap;
-	UnicodeFont font = null;
+    private static GameState instance = null;
 
-	TiledMap map = null;
+    /**
+     * Method getInstance.
+     *
+     * @return GameState
+     */
+    public static GameState getInstance() {
+        return instance;
+    }
 
-	Graphics mapGraphics = null;
+    /**
+     * Method drawString.
+     *
+     * @param g Graphics2D
+     * @param s String
+     * @param x int
+     * @param y int
+     */
+    public void drawString(Graphics2D g, String s, int x, int y) {
+        g.drawString(s, x, y);
+    }
 
-	private Image minimap;
+    /**
+     * Method drawStringCentered.
+     *
+     * @param g Graphics2D
+     * @param s String
+     * @param x int
+     * @param y int
+     */
+    public void drawStringCentered(Graphics2D g, String s, int x, int y) {
+        drawString(g, s, x - (g.getFontMetrics().stringWidth(s) / 2), y);
+    }
 
-	private boolean minimapCreated = false;
+    /**
+     * Method getID.
+     *
+     * @return String
+     */
+    @Override
+    public String getID() {
+        return "Game";
+    }
 
-	public String playerEnteredText = "";
+    /**
+     * Method init.
+     *
+     * @param gc GameContainer
+     */
+    @Override
+    public void init(GameContainer gc) {
+        instance = this;
+        g2 = gc.getGraphics();
+        font = Engine.getInstance().getFont();
+        map = MapLoader.getInstance();
+        map.loadMap("data/maps/betamap.tmx");
+        character = ImageLoader.loadImage("character");
+        initInterfaces();
+        init = true;
+    }
 
-	private void createMinimap() {
-		int mapWidth = (map.getWidth() * map.getTileWidth());
-		int mapHeight = (map.getHeight() * map.getTileHeight());
-		try {
-			minimap = new Image(mapWidth, mapHeight);
-			mapGraphics = minimap.getGraphics();
-		} catch (SlickException e) {
-			e.printStackTrace();
-		}
-		for (int x = 0; x < map.getWidth(); x++)
-			for (int y = 0; y < map.getHeight(); y++)
-				for (int z = 0; z < map.getLayerCount(); z++)
-					if (map.getTileImage(x, y, z) != null)
-						mapGraphics.drawImage(map.getTileImage(x, y, z), x * 32, y * 32, 0, 0, 32,
-								32);
-		minimap = minimap.getScaledCopy((int) (Main.app.getWidth() * .25f),
-				(int) (Main.app.getHeight() * .25f));
-		minimap.setAlpha(.9f);
-		mapGraphics.flush();
-		minimapCreated = true;
-	}
+    private void initInterfaces() {
+        new ChatboxInterface(0, Window.getFrame().getHeight() - 240, 600, 240, (int) WzFont.getDefaultFontSize() + 2);
+        new InventoryInterface(600, 240);
+    }
 
-	public void drawString(Graphics g, String s, int x, int y) {
-		g.drawString(s, x, y);
-	}
+    public boolean chatSelected = false;
 
-	public void drawStringCentered(Graphics g, String s, int x, int y) {
-		drawString(g, s, x - (font.getWidth(s) / 2), y);
-	}
+    public void handleKeys() {
+        for (Object o : Keyboard.getKeysPressed()) {
+            Entry<Integer, Character> entry = (Entry<Integer, Character>) o;
+            int key = entry.getKey();
+            char c = entry.getValue();
+            switch (key) {
+                case KeyEvent.VK_EQUALS:
+                    System.exit(0);
+                    break;
+                case KeyEvent.VK_UP:
+                    Client.getClient().movePlayer(0, -moveDistance);
+                    break;
+                case KeyEvent.VK_DOWN:
+                    Client.getClient().movePlayer(0, moveDistance);
+                    break;
+                case KeyEvent.VK_LEFT:
+                    Client.getClient().movePlayer(-moveDistance, 0);
+                    break;
+                case KeyEvent.VK_RIGHT:
+                    Client.getClient().movePlayer(moveDistance, 0);
+                    break;
+                case KeyEvent.VK_SPACE:
+                    // jump
+                    break;
+                case KeyEvent.VK_ESCAPE:
+                    chatSelected = false;
+                    playerEnteredText = "";
+                    break;
+                case KeyEvent.VK_F8:
+                    displayMinimap = !displayMinimap;
+                    break;
+                case KeyEvent.VK_BACK_SPACE:
+                    if (playerEnteredText.length() > 0)
+                        playerEnteredText = playerEnteredText.substring(0, playerEnteredText.length() - 1);
+                    else
+                        chatSelected = false;
+                    break;
+                case KeyEvent.VK_ENTER:
+                    if (chatSelected) {
+                        if (playerEnteredText != "") {
+                            Chat.messageEntered(playerEnteredText);
+                            playerEnteredText = "";
+                        }
+                    } else {
+                        chatSelected = true;
+                    }
+                    break;
+                case KeyEvent.VK_CONTROL:
+                    Window.getCamera().setFollowing(Client.getClient().getPlayer());
+                    break;
+                default:
+                    if (chatSelected) {
+                        for (char j : Client.validChars) {
+                            if (j != c)
+                                continue;
+                            if (WzFont.getStringWidth(g2, playerEnteredText + c) + 20 < 587 - WzFont.getStringWidth(g2, Client.getClient().getUsername()
+                                    + ":")) {
+                                playerEnteredText += c;
+                            }
+                        }
+                        break;
+                    }
+                    System.out.println("GameState: Unhandled key event - " + key);
+                    break;
+            }
+            if (!repeatableKeys.contains(key))
+                Keyboard.remove(key);
+        }
+    }
 
-	private void exit() {
-		Main.app.exit();
-	}
+    private int moveDistance = 16;
 
-	@Override
-	public String getID() {
-		return "Game";
-	}
+    /**
+     * Method mouseClicked.
+     *
+     * @param button     int
+     * @param x          int
+     * @param y          int
+     * @param clickCount int
+     */
+    @Override
+    public void mouseClicked(int button, int x, int y, int clickCount) {
 
-	@Override
-	public void init(GameContainer gc) throws SlickException {
-		font = Engine.getInstance().getFont();
-		map = new TiledMap("data/maps/betamap.tmx");
-		gc.getInput().enableKeyRepeat();
-		initInterfaces();
-	}
+    }
 
-	private void initInterfaces() {
-		new ChatboxInterface(0, Main.app.getHeight() - 240, 600, 240,
-				Engine.getInstance().fontSize + 2);
-		new InventoryInterface(600, 240);
-	}
+    /**
+     * Method render.
+     *
+     * @param gc GameContainer
+     * @param g  Graphics2D
+     */
+    @Override
+    public void render(GameContainer gc, Graphics2D g) {
+        Window.getCamera().update();
 
-	@Override
-	public void keyPressed(int key, char c) {
-		switch (key) {
-		case Input.KEY_ESCAPE:
-			exit();
-			break;
-		case Input.KEY_F8:
-			if (!minimapCreated)
-				createMinimap();
-			displayMinimap = !displayMinimap;
-			break;
-		case Input.KEY_BACK:
-			if (playerEnteredText.length() > 0)
-				playerEnteredText = playerEnteredText.substring(0, playerEnteredText.length() - 1);
-			break;
-		case Input.KEY_ENTER:
-			if (playerEnteredText != "") {
-				Chat.messageEntered(playerEnteredText);
-				playerEnteredText = "";
-			}
-			break;
-		case Input.KEY_UP:
-			Client.getPlayer().setY(Client.getPlayer().getY() + 10);
-			break;
-		case Input.KEY_DOWN:
-			Client.getPlayer().setY(Client.getPlayer().getY() - 10);
-			break;
-		case Input.KEY_LEFT:
-			Client.getPlayer().setX(Client.getPlayer().getX() - 10);
-			break;
-		case Input.KEY_RIGHT:
-			Client.getPlayer().setX(Client.getPlayer().getX() + 10);
-			break;
-		default:
-			if (c > 0 && c < 255) {
-				for (char invalid : invalidCharacters)
-					if (c == invalid)
-						return;
-				if (font.getWidth(playerEnteredText + c) + 20 < 587 - font.getWidth(Client
-						.getPlayer().getUsername() + ":"))
-					playerEnteredText += c;
-			}
-		}
-	}
+        map.drawMap(g);
+        g.setColor(Color.white);
+        g.drawString("pX: " + Client.getClient().getPlayer().getX() + ", pY: " + Client.getClient().getPlayer().getY(), 20, 200);
+        if (displayMinimap) {
 
-	private char[] invalidCharacters = new char[] { '<', '>' };
+            g.setColor(new Color(Color.black.getRed(), Color.black.getGreen(), Color.black.getBlue(), .9f));
+            g.fillRect(0, 0, Main.app.getWidth(), Main.app.getHeight());
 
-	@Override
-	public void mouseClicked(int button, int x, int y, int clickCount) {
+            map.drawMap(g);
 
-	}
+            g.setColor(Color.white);
+            drawStringCentered(g, "Minimap", gc.getWidth() / 2, 20);
+        }
+        g.drawImage(character, Client.getClient().getPlayer().getX() - Window.getCamera().getX(), Client.getClient().getPlayer().getY() - Window.getCamera().getY(), null);
 
-	@Override
-	public void render(GameContainer gc, Graphics g) throws SlickException {
-		map.render(-Client.getPlayer().getX(), Client.getPlayer().getY());
-		g.setColor(Color.white);
-		g.drawString("pX: " + Client.getPlayer().getX() + ", pY: " + Client.getPlayer().getY(), 20,
-				200);
-		if (displayMinimap) {
-			g.setColor(new Color(Color.black.r, Color.black.g, Color.black.b, .9f));
-			g.fillRect(0, 0, Main.app.getWidth(), Main.app.getHeight());
-			minimap.drawCentered(gc.getWidth() / 2, gc.getHeight() / 2);
-			g.setColor(Color.white);
-			drawStringCentered(g, "Minimap", gc.getWidth() / 2, 20);
-		}
-		InterfaceHandler.renderInterfaces(g);
+    }
 
-	}
+    private Image character;
 
-	@Override
-	public void update(GameContainer gc, int delta) throws SlickException {
+    /**
+     * Method update.
+     *
+     * @param gc    GameContainer
+     * @param delta int
+     */
+    @Override
+    public void update(GameContainer gc, int delta) {
+        handleKeys();
+    }
 
-	}
+    private boolean displayMinimap;
+
+    Font font = null;
+
+    Graphics2D g2 = null;
+
+    MapLoader map = null;
+
+    public String playerEnteredText = "";
+    @SuppressWarnings("serial")
+    final List<Integer> repeatableKeys = new ArrayList<Integer>() {
+        {
+            add(KeyEvent.VK_LEFT);
+            add(KeyEvent.VK_RIGHT);
+            add(KeyEvent.VK_UP);
+            add(KeyEvent.VK_DOWN);
+            add(KeyEvent.VK_SPACE);
+        }
+    };
 
 }

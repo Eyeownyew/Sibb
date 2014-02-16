@@ -1,71 +1,92 @@
 package com.sibb.util;
 
-import java.awt.Color;
-
-import org.newdawn.slick.SlickException;
-import org.newdawn.slick.UnicodeFont;
-import org.newdawn.slick.font.effects.ColorEffect;
-import org.newdawn.slick.font.effects.ShadowEffect;
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * @author Justin
- * 
+ * @version $Revision: 1.0 $
  */
-public class WzFont extends UnicodeFont {
-	public static WzFont rsct(int size) throws SlickException {
-		WzFont font = new WzFont("Ubuntu-R", size, false, false);
-		ShadowEffect shadow = new ShadowEffect(Color.black, 0, 0, .9f);
-		shadow.setBlurKernelSize(2);
-		font.getEffects().add(shadow);
-		font.getEffects().add(new ColorEffect(Color.white));
-		font.loadGlyphs();
-		return font;
-	}
-	boolean fontBold = false;
-	Color fontColor = Color.black;
-	boolean fontItalic = false;
-	String fontName = "rsct";
+public class WzFont {
 
-	int fontSize = 12;
+    private static final String DEFAULT_FONT = "Ubuntu-R";
 
-	/**
-	 * Constructors
-	 * 
-	 * @throws SlickException
-	 */
-	public WzFont() throws SlickException {
-		this("rsct", 12, false, false, Color.black);
-	}
+    private static final float DEFAULT_SIZE = 14;
 
-	public WzFont(String name, int size, boolean bold, boolean italic)
-			throws SlickException {
-		super("data/fonts/" + name + ".ttf", size, bold, italic);
-		fontSize = size;
-		fontName = name;
-		fontBold = bold;
-		fontItalic = italic;
-		addAsciiGlyphs();
-	}
+    private static WzFont instance;
 
-	public WzFont(String name, int size, boolean bold, boolean italic,
-			Color color) throws SlickException {
-		super("data/fonts/" + name + ".ttf", size, bold, italic);
-		fontSize = size;
-		fontName = name;
-		fontBold = bold;
-		fontItalic = italic;
-		fontColor = color;
-		addAsciiGlyphs();
-		getEffects().add(new ColorEffect(color));
-		loadGlyphs();
-	}
+    /**
+     * Method getDefaultFontSize.
+     *
+     * @return float
+     */
+    public static float getDefaultFontSize() {
+        return DEFAULT_SIZE;
+    }
 
-	public WzFont setColor(Color color) throws SlickException {
-		return new WzFont(fontName, fontSize, fontBold, fontItalic, color);
-	}
+    /**
+     * Method getInstance.
+     *
+     * @return WzFont
+     */
+    public static WzFont getInstance() {
+        if (instance == null)
+            return new WzFont(DEFAULT_FONT, DEFAULT_SIZE);
+        return instance;
+    }
 
-	/**
-	 * Variables
-	 */
+    /**
+     * Method getStringWidth.
+     *
+     * @param g      Graphics2D
+     * @param string String
+     * @return int
+     */
+    public static int getStringWidth(Graphics2D g, String string) {
+        return g.getFontMetrics().stringWidth(string);
+    }
 
+    /**
+     * Method createFont.
+     *
+     * @param name String
+     * @param size float
+     */
+    public void createFont(String name, float size) {
+        try {
+            font = (Font.createFont(Font.TRUETYPE_FONT, new File("data/fonts/" + name + ".ttf")))
+                    .deriveFont(14f);
+            fontSize = size;
+        } catch (FontFormatException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Method getFont.
+     *
+     * @return Font
+     */
+    public Font getFont() {
+        return font;
+    }
+
+    /**
+     * Constructor for WzFont.
+     *
+     * @param name String
+     * @param size float
+     */
+    public WzFont(String name, float size) {
+        instance = this;
+        createFont(name, size);
+    }
+
+    /**
+     * Variables
+     */
+    Font font = null;
+
+    public float fontSize;
 }

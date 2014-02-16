@@ -1,53 +1,90 @@
 package com.sibb.visual;
 
-import org.newdawn.slick.Graphics;
-import org.newdawn.slick.Image;
-import org.newdawn.slick.geom.Rectangle;
-
-import com.sibb.Main;
 import com.sibb.util.ImageLoader;
 
+import java.awt.*;
+
+/**
+ * @author Eyeownywe
+ * @version $Revision: 1.0 $
+ */
 public abstract class Interface {
 
-	public boolean focused = false;
-	public Rectangle bounds;
-	private Image interfaceExit;
-	private boolean exitable = true;
+    /**
+     * Method getBounds.
+     *
+     * @return Rectangle
+     */
+    public Rectangle getBounds() {
+        return bounds;
+    }
 
-	public boolean isExitable() {
-		return exitable;
-	}
+    /**
+     * Method getExitBounds.
+     *
+     * @return Rectangle
+     */
+    public Rectangle getExitBounds() {
+        return null;
+    }
 
-	public void setExitable(boolean exitable) {
-		this.exitable = exitable;
-	}
+    /**
+     * Method isExitable.
+     *
+     * @return boolean
+     */
+    public boolean isExitable() {
+        return exitable;
+    }
 
-	public Interface(int width, int height) {
-		this((Main.app.getWidth() / 2) - (width / 2), (Main.app.getHeight() / 2) - (height / 2),
-				width, height);
-	}
+    /**
+     * Method render.
+     *
+     * @param g Graphics2D
+     */
+    public void render(Graphics2D g) {
+        if (exitable)
+            g.drawImage(interfaceExit, (int) getExitBounds().getX(), (int) getExitBounds().getY(), null);
+    }
 
-	public Interface(int x, int y, int width, int height) {
-		this.bounds = new Rectangle(x, y, width, height);
-		InterfaceHandler.getActiveInterfaces().add(this);
-		interfaceExit = ImageLoader.loadInterface("Interface-Exit");
-	}
+    /**
+     * Method setBounds.
+     *
+     * @param bounds Rectangle
+     */
+    public void setBounds(Rectangle bounds) {
+        this.bounds = bounds;
+    }
 
-	public Rectangle getBounds() {
-		return bounds;
-	}
+    /**
+     * Method setExitable.
+     *
+     * @param exitable boolean
+     */
+    public void setExitable(boolean exitable) {
+        this.exitable = exitable;
+    }
 
-	public void render(Graphics g) {
-		if (exitable)
-			g.drawImage(interfaceExit, getExitBounds().getX(), getExitBounds().getY());
-	}
+    /**
+     * Constructor for Interface.
+     *
+     * @param x      int
+     * @param y      int
+     * @param width  int
+     * @param height int
+     */
+    public Interface(int x, int y, int width, int height) {
+        this.bounds = new Rectangle(x, y, width, height);
+        InterfaceHandler.getActiveInterfaces().add(this);
+        interfaceExit = ImageLoader.loadInterface("Interface-Exit");
+    }
 
-	public Rectangle getExitBounds() {
-		return null;
-	}
+    public Rectangle bounds;
 
-	public void setBounds(Rectangle bounds) {
-		this.bounds = bounds;
-	}
+    private boolean exitable = true;
+
+    public boolean focused = false;
+
+    private Image interfaceExit;
 
 }
