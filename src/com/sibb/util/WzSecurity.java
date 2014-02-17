@@ -1,7 +1,5 @@
 package com.sibb.util;
 
-import com.sibb.Client;
-
 import java.security.MessageDigest;
 
 /**
@@ -17,17 +15,15 @@ public class WzSecurity {
      * @return String
      */
     public static String md5(String s) {
-        Client c = Client.getClient();
-        MessageDigest m = null;
+        MessageDigest m;
         try {
             m = MessageDigest.getInstance("MD5");
-            byte messageDigest[] = m.digest(c.getPassword().getBytes());
-            for (int i = 0; i < 1000; i++)
-                messageDigest = m.digest(messageDigest);
+            byte messageDigest[] = m.digest(s.getBytes());
+            messageDigest = m.digest(messageDigest);
 
-            StringBuffer hexString = new StringBuffer();
-            for (int i = 0; i < messageDigest.length; i++)
-                hexString.append(Integer.toHexString(0xFF & messageDigest[i]));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : messageDigest)
+                hexString.append(Integer.toHexString(0xFF & b));
 
             return hexString.toString();
         } catch (Exception e) {
